@@ -1,0 +1,59 @@
+<link rel="import" href="../polymer/polymer.html" />
+<link rel="import" href="../px-card/px-card.html" />
+
+<dom-module id="file-upload-header">
+  <style>
+    .header {
+      border-bottom: 1px solid #9999a3;
+      padding: 15px;
+      box-sizing: border-box;
+      background-color: #fff;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-justify-content: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+    }
+    .header > h3 {
+      margin: 0;
+      font-family: "GE Inspira Sans";
+      color: #000;
+    }
+  </style>
+  <template>
+    <template is="dom-if" if="{{showHeader}}">
+      <div class="header">
+        <h3>{{title}}</h3>
+      </div>
+    </template>
+  </template>
+</dom-module>
+<script>
+  Polymer({
+    is: 'file-upload-header',
+    behaviors: [px.card],
+    properties: {
+        /**
+          * List of excursions
+          */
+        showHeader: {
+            type: Boolean,
+            value: true,
+            reflectToAttribute: true
+        },
+        tile: {
+            type: String,
+            value: "File Upload",
+            reflectToAttribute: true
+        }
+    },
+    
+    ready: function() {
+        
+    }
+  });
+</script>

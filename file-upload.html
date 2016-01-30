@@ -1,0 +1,481 @@
+<link rel="import" href="../polymer/polymer.html" />
+<link rel="import" href="../px-card/px-card.html" />
+
+<dom-module id="file-upload">
+  <style>
+    .fileUploader {
+      border-bottom: 1px solid #9999a3;
+      padding: 15px;
+      box-sizing: border-box;
+      background-color: #fff;
+      width: 50%;
+      float: left;
+    }
+    .fileUploader > h4 {
+      margin: 0;
+      font-family: "GE Inspira Sans";
+      color: #000;
+      width: 100%;
+    }
+    .progressBar {
+        margin: 0 0 0 10px;
+        font-size: 14px;
+        clear: both;
+        -moz-transition: opacity 1s linear;
+        -o-transition: opacity 1s linear;
+        -webkit-transition: opacity 1s linear;
+        display: inline-block;
+    }
+    .percent {
+        background-color: #99ccff;
+        height: auto;
+        width: 0;
+        opacity: 0;
+        line-height: 14px;
+        text-align: right;
+        padding-right: 5px;
+    }
+    .loading {
+        opacity: 1.0;
+    }
+    .fileList {
+        margin: 10px 0;
+        font-size: 14px;
+    }
+    .fileListUl {
+        margin: 0;
+        padding: 0 0 0 15px;
+        list-style: none;
+    }
+    .uploadAborted {
+        width: auto;
+        background-color: #fff;
+        font-weight: bold;
+        text-align: left;
+    }
+    .fileConsole {
+        overflow: auto;
+        font-size: 12px;
+        max-height: 200px;
+    }
+    .fileConfig {
+        width: 50%;
+        border-left: 1px solid #9999a3;
+        border-bottom: 1px solid #9999a3;
+        padding: 15px;
+        box-sizing: border-box;
+        background-color: #fff;
+        float: left;
+    }
+    .configItem > div {
+        float: left;
+        width: 120px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    .configItem > input {
+        width: 13px;
+        text-align: center;
+    }
+    .configItem > small {
+        margin-left: 10px;
+    }
+    .fileConsoleContainer {
+        float: left;
+        background-color: #fff;
+        width: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+    }
+    .fileConsoleContainer > h4 {
+      margin: 0;
+      font-family: "GE Inspira Sans";
+      color: #000;
+      width: 100%;
+    }
+  </style>
+  <template>
+      <div class="fileUploader">
+        <h4>Files</h4>
+        <div id="fileList" class="fileList">
+            Your browser doesn't have HTML5 support.
+        </div>
+        <div id="fileContainer">
+            <button id="selectFile">Select files</button>
+            <button id="uploadFile">Upload files</button>
+            <button id="cancelUpload">Cancel Upload</button>
+        </div>
+      </div>
+      <div class="fileConfig">
+          <div class="configItem" id="delimiter">
+              <div>Delimiter</div>
+              <input type="text" maxlength="1" />
+              <small>Example: ;</small>
+          </div>
+          <div class="configItem" id="timestampIndex">
+              <div>Timestamp Index</div>
+              <input type="text" maxlength="1" />
+              <small></small>
+          </div>
+          <div class="configItem" id="tagnameIndex">
+              <div>Tag Name Index</div>
+              <input type="text" maxlength="1" />
+              <small></small>
+          </div>
+          <div class="configItem" id="valueIndex">
+              <div>Value Index</div>
+              <input type="text" maxlength="1" />
+              <small></small>
+          </div>
+      </div>
+      <div class="fileConsoleContainer">
+        <h4>Console</h4>
+        <pre id="fileConsole" class="fileConsole"></pre>
+      </div>
+  </template>
+</dom-module>
+<script>
+  // Local variables
+  // Requests
+  var requests = [];
+  // First line from file
+  var lineExtract = "";
+  // File configuration
+  var fileConfig = {valueindex: "", tagindex: "", dateindex: "", delimiter: ""};
+  
+  Polymer({
+    is: 'file-upload',
+    behaviors: [px.card],
+    properties: {
+        /**
+          * List of excursions
+          */
+        showHeader: {
+            type: Boolean,
+            value: true,
+            reflectToAttribute: true
+        },
+        tile: {
+            type: String,
+            value: "File Upload",
+            reflectToAttribute: true
+        },
+        maxSize: {
+            type: Number,
+            value: 10485760, //10MB
+            reflectToAttribute: true
+        }
+    },
+    
+    _checkFileApis: function() {
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    },
+    
+    _abortReader: function(reader) {
+        reader.abort();
+    },
+    
+    _handleFileSelect(evt) {
+        var self = this;
+        var fileConsole = document.querySelector('#fileConsole');
+        var fileList = document.querySelector('#fileList').insertBefore(document.createElement('ul'), null);
+        var files = evt.target.files;
+        var fileUploader = document.querySelector('.fileUploader');
+        var fileConfig = document.querySelector('.fileConfig');
+        
+        fileList.className = "fileListUl style-scope file-upload";
+        
+        for (var i = 0, f; f = files[i]; i++) {
+            
+            if (!f.type.match('text/csv')) {
+                fileConsole.textContent += '"' + f.name + '" is not allowed.\n';
+                continue;
+            }
+            
+            if (f.size > self.maxSize) {
+                fileConsole.textContent += '"' + f.name + '" is is too big.\n';
+                continue;
+            }
+            
+            var fileHtml = document.createElement('li');
+            fileHtml.innerHTML = ['<span>', f.name, '</span><div id="progressBar" class="progressBar style-scope file-upload">', '<div class="percent style-scope file-upload"></div>', '</div>'].join('');
+            fileList.insertBefore(fileHtml, null);
+            
+            var progressBar = fileHtml.querySelector('#progressBar').querySelector('.percent');
+            
+            progressBar.style.width = '0px';
+            progressBar.textContent = '0%';
+            
+            var request = new XMLHttpRequest();
+            
+            request.upload.bar = progressBar;
+            request.bar = progressBar;
+            request.fileName = f.name;
+            
+            request.onerror = function(evt) {
+                var fileConsole = document.querySelector('#fileConsole');
+                switch(evt.target.error.code) {
+                    case evt.target.error.NOT_FOUND_ERR:
+                        fileConsole.textContent += '\nFile Not Found!';
+                        break;
+                    case evt.target.error.NOT_READABLE_ERR:
+                        fileConsole.textContent += '\nFile is not readable';
+                        break;
+                    case evt.target.error.ABORT_ERR:
+                        fileConsole.textContent += '\nOperation Aborted!';
+                        break;
+                    default:
+                        fileConsole.textContent += '\nAn error has occurred when reading this file.';
+                }
+            };
+            
+            // Chrome
+            request.upload.onprogress = function(evt) {
+                if (evt.lengthComputable) {
+                    var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
+                    if (percentLoaded < 100) {
+                        this.bar.style.width = (percentLoaded * 2) + 'px';
+                        this.bar.textContent = percentLoaded + '%';
+                    }
+                }
+            };
+            // Firefox
+            // request.onprogress = function(evt) {
+            //     var progressBar = fileHtml.querySelector('#progressBar').querySelector('.percent');
+            //     if (evt.lengthComputable) {
+            //         var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
+            //         if (percentLoaded < 100) {
+            //             progressBar.style.width = (percentLoaded * 2) + 'px';
+            //             progressBar.textContent = percentLoaded + '%';
+            //         }
+            //     }
+            // }
+            
+            request.onabort = function(e) {
+                fileConsole.textContent += '\nUpload cancelled for: ' + e.target.fileName;
+                e.target.bar.textContent = 'Cancelled';
+                e.target.bar.classList.add('uploadAborted');
+            };
+            request.onloadstart = function(e) {
+                this.bar.classList.remove('uploadAborted');
+                this.bar.classList.add('loading');
+                this.bar.textContent = "0%";
+                this.bar.style.width = '0px';
+                document.querySelector('#fileConsole').textContent = '';
+            };
+            request.onload = function(e) {
+                this.bar.style.width = '200px';
+                this.bar.textContent = '100%';
+            };
+            
+            var fd = new FormData();
+            fd.append("file", f);
+            // fd.append("delimiter", ";");
+            fd.append("timestamp", "%m/%d/%Y %I:%M:%S %p");
+            fd.append("packetsize", "5000");
+            fd.append("equipment_index", "-1");
+            // fd.append("tagname_index", "2");
+            // fd.append("timestamp_index", "3");
+            // fd.append("value_index", "4");
+            fd.append("concat", "-")
+            fd.append("metername_index", "-1");
+            
+            requests.push([request, fd]);
+            
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                var line = e.target.result;
+                if (line.match(/\n/)) {
+                    line = line.substr(0, line.indexOf('\n'));
+                } else
+                if (line.match(/\r/)) {
+                    line = line.substr(0, line.indexOf('\r'));
+                };
+                
+                lineExtract = line;
+                
+                var tempText = fileConsole.textContent;
+                fileConsole.textContent = "\nFirst line from file " + reader.fileName;
+                fileConsole.textContent += "\n" + line;
+                fileConsole.textContent += "\n";
+                fileConsole.textContent += tempText;
+                
+                if (line.match(/[-;,\s|:]/)) {
+                    var dateindex = 0;
+                    var valueindex = 0;
+                    var tagindex = 0;
+                    var delimiter = line.match(/[-;,\s|]/);
+                    var lsplit = line.split(delimiter);
+                    for (var j=0, l; l = lsplit[j]; j++) {
+                        if (l.match(/([0-9]+[:][0-9]+\w)/g)) { dateindex = j;}
+                        else if (l.match(/([0-9]+[.,]?[0-9]?[^:\W]\w)/g)) { valueindex = j;}
+                        else { tagindex = j;}
+                    }
+                    
+                    fileConfig.delimiter = delimiter;
+                    fileConfig.valueindex = valueindex;
+                    fileConfig.tagindex = tagindex;
+                    fileConfig.dateindex = dateindex;
+
+                    document.querySelector('#delimiter').querySelector('input').value = delimiter;
+                    document.querySelector('#timestampIndex').querySelector('input').value = dateindex;
+                    document.querySelector('#valueIndex').querySelector('input').value = valueindex;
+                    document.querySelector('#tagnameIndex').querySelector('input').value = tagindex;
+                    
+                    document.querySelector('#delimiter').querySelector('small').textContent = "From file: " + line.match(/[-;,\s|:]/g).join("   ");
+                    document.querySelector('#timestampIndex').querySelector('small').textContent = "From file: " + lsplit[dateindex];
+                    document.querySelector('#valueIndex').querySelector('small').textContent = "From file: " + lsplit[valueindex];
+                    document.querySelector('#tagnameIndex').querySelector('small').textContent = "From file: " + lsplit[tagindex];
+                };
+            };
+            
+            var sliced = f.slice(0, 100);
+            reader.fileName = f.name;
+            reader.readAsBinaryString(sliced);
+        }
+        
+        fileConfig.offsetHeight < fileUploader.offsetHeight ? fileConfig.style.minHeight = fileUploader.offsetHeight + "px" : fileUploader.style.minHeight = fileConfig.offsetHeight + "px";
+    },
+    
+    _handleUploadFiles: function() {
+        for (var i = 0, r; r = requests[i]; i++) {
+            var request = r[0];
+            var file = r[1];
+            
+            file.append("tagname_index", fileConfig.tagindex);
+            file.append("timestamp_index", fileConfig.dateindex);
+            file.append("value_index", fileConfig.valueindex);
+            file.append("delimiter", fileConfig.delimiter);
+            
+            request.open("POST", "/api/upload", true);
+            request.send(file); 
+        }
+    },
+    
+    _handleCancelUpload: function() {
+        for (var i = 0, r; r = requests[i]; i++) {
+            var request = r[0];
+
+            request.abort(); 
+        }
+    },
+    
+    _changeFileDelimiter: function(delimiter) {
+        var line = lineExtract;
+        
+        document.querySelector('#timestampIndex').querySelector('input').value = "";
+        document.querySelector('#valueIndex').querySelector('input').value = "";
+        document.querySelector('#tagnameIndex').querySelector('input').value = "";
+        
+        document.querySelector('#timestampIndex').querySelector('small').textContent = "";
+        document.querySelector('#valueIndex').querySelector('small').textContent = "";
+        document.querySelector('#tagnameIndex').querySelector('small').textContent = "";
+            
+        if (line.match(delimiter)) {
+
+            var dateindex = 0;
+            var valueindex = 0;
+            var tagindex = 0;
+            var lsplit = line.split(delimiter);
+            
+            for (var j=0, l; l = lsplit[j]; j++) {
+                if (l.match(/([0-9]+[:][0-9]+\w)/g)) { dateindex = j;}
+                else if (l.match(/([0-9]+[.,]?[0-9]?[^:\W]\w)/g)) { valueindex = j;}
+                else { tagindex = j;}
+            }
+            
+            fileConfig.delimiter = delimiter;
+            fileConfig.valueindex = valueindex;
+            fileConfig.tagindex = tagindex;
+            fileConfig.dateindex = dateindex;    
+
+            document.querySelector('#delimiter').querySelector('input').value = delimiter;
+            document.querySelector('#timestampIndex').querySelector('input').value = dateindex;
+            document.querySelector('#valueIndex').querySelector('input').value = valueindex;
+            document.querySelector('#tagnameIndex').querySelector('input').value = tagindex;
+            
+            document.querySelector('#delimiter').querySelector('small').textContent = "From file: " + line.match(/[-;,\s|:]/g).join("   ");
+            document.querySelector('#timestampIndex').querySelector('small').textContent = "From file: " + lsplit[dateindex];
+            document.querySelector('#valueIndex').querySelector('small').textContent = "From file: " + lsplit[valueindex];
+            document.querySelector('#tagnameIndex').querySelector('small').textContent = "From file: " + lsplit[tagindex];
+        };
+    },
+    
+    _changeIndex: function(e) {
+        var delimiter = document.querySelector('#delimiter').querySelector('input').value;
+        var fromFile = e.target.nextElementSibling;
+        var index = e.target.value; 
+        console.log(delimiter);
+        console.log(fromFile);
+        console.log(index);
+        console.log(lineExtract);
+        fromFile.textContent = "";
+        
+        if(lineExtract.match(delimiter)) {
+            var lsplit = lineExtract.split(delimiter);
+            if (index >= 0 && index < lsplit.length) {
+                fromFile.textContent = "From file: " + lsplit[index];
+            }
+        }
+    },
+    
+    ready: function() {
+        var self = this;
+        var fileList = this.$.fileList;
+        var selectFile = this.$.selectFile;
+        var uploadFile = this.$.uploadFile;
+        var cancelUpload = this.$.cancelUpload;
+        var delimiterInput = document.querySelector('#delimiter').querySelector('input');
+        var timestampInput = document.querySelector('#timestampIndex').querySelector('input');
+        var valueInput = document.querySelector('#valueIndex').querySelector('input');
+        var tagnameInput = document.querySelector('#tagnameIndex').querySelector('input');
+        var selectFileInput = document.createElement("INPUT");
+        var fileUploader = document.querySelector('.fileUploader');
+        var fileConfig = document.querySelector('.fileConfig');
+        
+        selectFileInput.setAttribute("type", "file");
+        selectFileInput.setAttribute("multiple", "true");
+        
+        selectFile.addEventListener('click', function() {
+            selectFileInput.click();
+        }, false);
+        
+        uploadFile.addEventListener('click', function() {
+            self._handleUploadFiles();
+        }, false);
+        
+        cancelUpload.addEventListener('click', function() {
+            self._handleCancelUpload();
+        }, false);
+        
+        delimiterInput.addEventListener('change', function(e) {
+            self._changeFileDelimiter(e.target.value);
+        }, false);
+        
+        timestampInput.addEventListener('change', function(e) {
+            self._changeIndex(e);
+        }, false);
+        
+        valueInput.addEventListener('change', function(e) {
+            self._changeIndex(e);
+        }, false);
+        
+        tagnameInput.addEventListener('change', function(e) {
+            self._changeIndex(e);
+        }, false);
+        
+        if (this._checkFileApis()) {
+            fileList.textContent = '';
+            selectFileInput.addEventListener('change', self._handleFileSelect, false);
+        };
+        
+        fileConfig.offsetHeight < fileUploader.offsetHeight ? fileConfig.style.minHeight = fileUploader.offsetHeight + "px" : fileUploader.style.minHeight = fileConfig.offsetHeight + "px";
+    }
+  });
+</script>
