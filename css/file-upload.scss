@@ -1,0 +1,164 @@
+// Settings
+@import "../../px-colors-design/_settings.colors.scss";
+
+// Generic
+@import "../../px-normalize-design/_generic.normalize.scss";
+@import "../../px-box-sizing-design/_generic.box-sizing.scss";
+@import "../../px-helpers-design/_generic.helpers.scss";
+
+// Base
+@import "../../px-flexbox-design/_base.flexbox.scss";
+@import "../../px-viewport-design/_base.viewport.scss";
+@import "../../px-typography-design/_base.typography.scss";
+
+// Trumps
+@import "../../inuit-clearfix/_trumps.clearfix.scss";
+@import "../../px-spacing-responsive-design/_trumps.spacing-responsive.scss";
+@import "../../px-widths-responsive-design/_trumps.widths-responsive.scss";
+
+// PX Defaults Design
+@import "../../px-defaults-design/_settings.defaults.scss";
+
+// PX Layout
+@import "../../px-layout-design/_objects.layout.scss";
+
+// Layout
+.main {
+    background-color: #fff;
+    margin-left: 0;
+}
+.fileUploader {
+    border-bottom: 1px solid $gray4;
+    padding: 15px;
+    box-sizing: border-box;
+}
+.fileUploader > h4 {
+    margin: 0;
+    font-family: "GE Inspira Sans";
+    color: #000;
+    width: 100%;
+}
+.progressBar {
+    margin: 0 0 0 10px;
+    font-size: 14px;
+    clear: both;
+    -moz-transition: opacity 1s linear;
+    -o-transition: opacity 1s linear;
+    -webkit-transition: opacity 1s linear;
+    display: inline-block;
+}
+.percent {
+    background-color: $blue-light;
+    height: auto;
+    width: 0;
+    opacity: 0;
+    line-height: 14px;
+    text-align: right;
+    padding-right: 5px;
+}
+.loading {
+    opacity: 1.0;
+}
+.fileList {
+    margin: 10px 0;
+    font-size: 14px;
+}
+.fileListUl {
+    margin: 0;
+    padding: 0 0 0 15px;
+    list-style: none;
+}
+.tagName {
+    cursor: default;
+}
+.uploadAborted {
+    width: auto;
+    background-color: #fff;
+    font-weight: bold;
+    text-align: left;
+}
+.fileConsole {
+    overflow: auto;
+    font-size: 12px;
+    max-height: 200px;
+}
+.fileConfig {
+    border-left: 1px solid $gray4;
+    border-bottom: 1px solid $gray4;
+    padding: 15px;
+    box-sizing: border-box;
+}
+.configItem > input{
+    width: 200px;
+    text-align: left;
+    padding-left: 3px;
+    border-radius: 5px;
+    border: 1px solid $gray4;
+}
+.configItem > select {
+    width: 200px;
+}
+.configItem {
+    margin-top: 5px;
+}
+.configItem:first-child {
+    margin-top: 0px;
+}
+.configItem > div {
+    float: left;
+    width: 170px;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 23px;
+}
+#delimiter > input {
+    width: 17px;
+    text-align: center;
+    border-radius: 5px;
+    border: 1px solid $gray4;
+}
+.configItem > small {
+    margin-left: 10px;
+    color: $blue;
+}
+.configItem > small > a, .configItem > small > a:visited {
+    color: $blue;
+}
+.fileConsoleContainer {
+    float: left;
+    background-color: #fff;
+    width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+}
+.fileConsoleContainer > h4 {
+    margin: 0;
+    font-family: "GE Inspira Sans";
+    color: #000;
+    width: 100%;
+}
+.configHelp > i {
+    cursor: pointer;
+}
+.configHelp {
+    text-align: right;
+    color: $blue;
+    font-size: 12px;
+    margin-bottom: -12px;
+}
+paper-tooltip {
+    opacity: 1;
+    background: $gray5;
+}
+paper-tooltip > div > div {
+    text-align: left;
+    font-size: 12px;
+}
+paper-tooltip > div > div > ul {
+    margin-left: 0;
+    margin-top: 5px;
+    padding-left: 25px;
+}
+paper-tooltip > div > div > span {
+    font-weight: bold;
+}

@@ -1,132 +1,83 @@
 <link rel="import" href="../polymer/polymer.html" />
 <link rel="import" href="../px-card/px-card.html" />
+<link rel="import" href="../paper-tooltip/paper-tooltip.html" />
 
 <dom-module id="file-upload">
-  <style>
-    .fileUploader {
-      border-bottom: 1px solid #9999a3;
-      padding: 15px;
-      box-sizing: border-box;
-      background-color: #fff;
-      width: 50%;
-      float: left;
-    }
-    .fileUploader > h4 {
-      margin: 0;
-      font-family: "GE Inspira Sans";
-      color: #000;
-      width: 100%;
-    }
-    .progressBar {
-        margin: 0 0 0 10px;
-        font-size: 14px;
-        clear: both;
-        -moz-transition: opacity 1s linear;
-        -o-transition: opacity 1s linear;
-        -webkit-transition: opacity 1s linear;
-        display: inline-block;
-    }
-    .percent {
-        background-color: #99ccff;
-        height: auto;
-        width: 0;
-        opacity: 0;
-        line-height: 14px;
-        text-align: right;
-        padding-right: 5px;
-    }
-    .loading {
-        opacity: 1.0;
-    }
-    .fileList {
-        margin: 10px 0;
-        font-size: 14px;
-    }
-    .fileListUl {
-        margin: 0;
-        padding: 0 0 0 15px;
-        list-style: none;
-    }
-    .uploadAborted {
-        width: auto;
-        background-color: #fff;
-        font-weight: bold;
-        text-align: left;
-    }
-    .fileConsole {
-        overflow: auto;
-        font-size: 12px;
-        max-height: 200px;
-    }
-    .fileConfig {
-        width: 50%;
-        border-left: 1px solid #9999a3;
-        border-bottom: 1px solid #9999a3;
-        padding: 15px;
-        box-sizing: border-box;
-        background-color: #fff;
-        float: left;
-    }
-    .configItem > div {
-        float: left;
-        width: 120px;
-        font-size: 14px;
-        font-weight: bold;
-    }
-    .configItem > input {
-        width: 13px;
-        text-align: center;
-    }
-    .configItem > small {
-        margin-left: 10px;
-    }
-    .fileConsoleContainer {
-        float: left;
-        background-color: #fff;
-        width: 100%;
-        padding: 15px;
-        box-sizing: border-box;
-    }
-    .fileConsoleContainer > h4 {
-      margin: 0;
-      font-family: "GE Inspira Sans";
-      color: #000;
-      width: 100%;
-    }
-  </style>
+  <link rel="stylesheet" type="text/css" href="css/file-upload.css">
   <template>
-      <div class="fileUploader">
-        <h4>Files</h4>
-        <div id="fileList" class="fileList">
-            Your browser doesn't have HTML5 support.
+      <div class="layout main">
+        <div class="fileUploader layout__item u-1/2">
+            <h4>Files</h4>
+            <div id="fileList" class="fileList">
+                Your browser doesn't have HTML5 support.
+            </div>
+            <div id="fileContainer">
+                <button id="selectFile">Select files</button>
+                <button id="uploadFile">Upload files</button>
+                <button id="cancelUpload">Cancel Upload</button>
+            </div>
         </div>
-        <div id="fileContainer">
-            <button id="selectFile">Select files</button>
-            <button id="uploadFile">Upload files</button>
-            <button id="cancelUpload">Cancel Upload</button>
+        <div class="fileConfig layout__item u-1/2">
+            <div class="configHelp">
+                <i class="fa fa-question-circle" id="configHelp"></i>
+                <paper-tooltip for="configHelp" position="left" fitToVisibleBounds>
+                    <div>
+                        <span>Configuration:</span>
+                        <ul>
+                            <li>Delimiter - the delimiter char used in the csv file.</li>
+                            <li>Timestamp field - the timestamp row in the csv file.</li>
+                            <li>Timestamp Mask - the timestamp format used in the csv file.</li>
+                            <li>Tag Name field - the source tag name row in the csv file.</li>
+                            <li>Equipment field - the equipment name row in the csv file.</li>
+                            <li>Value field - the value row in the csv file.</li>
+                            <li>Meter Name field - the meter name row index in the csv file.</li>
+                            <li>Meter Name - the meter name where the data will be saved in Predix Timeseries.</li>
+                        </ul>
+                        <span>Notes:</span>
+                        <ul>
+                            <li>Note that all fields are required, but you can use <b>Meter Name</b> and <b>Meter Name field</b> interchangeably.</li>
+                            <li>If <b>Meter Name field</b> is used it's going to used even if <b>Meter Name</b> is also present.</li>
+                            <li>If <b>Meter Name field</b> or <b>Meter Name</b> are used, <b>Tag Name field</b> and <b>Equipment Name field</b> don't need to be used'</li>
+                            <li>If <b>Meter Name field</b> or <b>Meter Name</b> are <b>not</b> used, <b>Tag Name field</b> and <b>Equipment Name field</b> are goind to be used to create the meter name.</li>
+                        </ul>
+                    </div>
+                </paper-tooltip>
+            </div>
+            <div class="configItem" id="delimiter">
+                <div>Delimiter</div>
+                <input type="text" maxlength="1" />
+                <small>Suggested: ;</small>
+            </div>
+            <div class="configItem" id="timestampIndex">
+                <div>Timestamp field</div>
+                <select></select>
+            </div>
+            <div class="configItem" id="timestampMask">
+                <div>Timestamp Mask</div>
+                <input type="text" value="%m/%d/%Y %I:%M:%S %p" />
+                <small><a href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior" target="_blank">Specification</a></small>
+            </div>
+            <div class="configItem" id="tagnameIndex">
+                <div>Tag Name field</div>
+                <select></select>
+            </div>
+            <div class="configItem" id="equipmentIndex">
+                <div>Equipment Name field</div>
+                <select></select>
+            </div>
+            <div class="configItem" id="valueIndex">
+                <div>Value field</div>
+                <select></select>
+            </div>
+            <div class="configItem" id="meterIndex">
+                <div>Meter Name field</div>
+                <select></select>
+            </div>
+            <div class="configItem" id="meterName">
+                <div>Meter Name</div>
+                <input type="text" />
+            </div>
         </div>
-      </div>
-      <div class="fileConfig">
-          <div class="configItem" id="delimiter">
-              <div>Delimiter</div>
-              <input type="text" maxlength="1" />
-              <small>Example: ;</small>
-          </div>
-          <div class="configItem" id="timestampIndex">
-              <div>Timestamp Index</div>
-              <input type="text" maxlength="1" />
-              <small></small>
-          </div>
-          <div class="configItem" id="tagnameIndex">
-              <div>Tag Name Index</div>
-              <input type="text" maxlength="1" />
-              <small></small>
-          </div>
-          <div class="configItem" id="valueIndex">
-              <div>Value Index</div>
-              <input type="text" maxlength="1" />
-              <small></small>
-          </div>
       </div>
       <div class="fileConsoleContainer">
         <h4>Console</h4>
@@ -141,7 +92,7 @@
   // First line from file
   var lineExtract = "";
   // File configuration
-  var fileConfig = {valueindex: "", tagindex: "", dateindex: "", delimiter: ""};
+  var fileConfig = {valueindex: "", tagindex: "", dateindex: "", delimiter: "", mask: "%m/%d/%Y %I:%M:%S %p", metername: "", meterindex: "", equipmentindex: ""};
   
   Polymer({
     is: 'file-upload',
@@ -188,6 +139,9 @@
         var fileUploader = document.querySelector('.fileUploader');
         var fileConfig = document.querySelector('.fileConfig');
         
+        // Have to get the polymer element in order to use the functions defined here at runtime
+        var fileUploadBody = document.querySelector('#fileUploadBody');
+        
         fileList.className = "fileListUl style-scope file-upload";
         
         for (var i = 0, f; f = files[i]; i++) {
@@ -203,7 +157,7 @@
             }
             
             var fileHtml = document.createElement('li');
-            fileHtml.innerHTML = ['<span>', f.name, '</span><div id="progressBar" class="progressBar style-scope file-upload">', '<div class="percent style-scope file-upload"></div>', '</div>'].join('');
+            fileHtml.innerHTML = ['<span class="tagName style-scope file-upload">', fileUploadBody.resizeName(f.name), '<paper-tooltip position="right">', f.name, '</paper-tooltip>', '</span><div id="progressBar" class="progressBar style-scope file-upload">', '<div class="percent style-scope file-upload"></div>', '</div>'].join('');
             fileList.insertBefore(fileHtml, null);
             
             var progressBar = fileHtml.querySelector('#progressBar').querySelector('.percent');
@@ -275,15 +229,8 @@
             
             var fd = new FormData();
             fd.append("file", f);
-            // fd.append("delimiter", ";");
-            fd.append("timestamp", "%m/%d/%Y %I:%M:%S %p");
             fd.append("packetsize", "5000");
-            fd.append("equipment_index", "-1");
-            // fd.append("tagname_index", "2");
-            // fd.append("timestamp_index", "3");
-            // fd.append("value_index", "4");
-            fd.append("concat", "-")
-            fd.append("metername_index", "-1");
+            fd.append("concat", "_")
             
             requests.push([request, fd]);
             
@@ -306,33 +253,7 @@
                 fileConsole.textContent += "\n";
                 fileConsole.textContent += tempText;
                 
-                if (line.match(/[-;,\s|:]/)) {
-                    var dateindex = 0;
-                    var valueindex = 0;
-                    var tagindex = 0;
-                    var delimiter = line.match(/[-;,\s|]/);
-                    var lsplit = line.split(delimiter);
-                    for (var j=0, l; l = lsplit[j]; j++) {
-                        if (l.match(/([0-9]+[:][0-9]+\w)/g)) { dateindex = j;}
-                        else if (l.match(/([0-9]+[.,]?[0-9]?[^:\W]\w)/g)) { valueindex = j;}
-                        else { tagindex = j;}
-                    }
-                    
-                    fileConfig.delimiter = delimiter;
-                    fileConfig.valueindex = valueindex;
-                    fileConfig.tagindex = tagindex;
-                    fileConfig.dateindex = dateindex;
-
-                    document.querySelector('#delimiter').querySelector('input').value = delimiter;
-                    document.querySelector('#timestampIndex').querySelector('input').value = dateindex;
-                    document.querySelector('#valueIndex').querySelector('input').value = valueindex;
-                    document.querySelector('#tagnameIndex').querySelector('input').value = tagindex;
-                    
-                    document.querySelector('#delimiter').querySelector('small').textContent = "From file: " + line.match(/[-;,\s|:]/g).join("   ");
-                    document.querySelector('#timestampIndex').querySelector('small').textContent = "From file: " + lsplit[dateindex];
-                    document.querySelector('#valueIndex').querySelector('small').textContent = "From file: " + lsplit[valueindex];
-                    document.querySelector('#tagnameIndex').querySelector('small').textContent = "From file: " + lsplit[tagindex];
-                };
+                fileUploadBody._changeFileDelimiter(line.match(/[-;,\s|]/));
             };
             
             var sliced = f.slice(0, 100);
@@ -352,6 +273,10 @@
             file.append("timestamp_index", fileConfig.dateindex);
             file.append("value_index", fileConfig.valueindex);
             file.append("delimiter", fileConfig.delimiter);
+            file.append("timestamp", fileConfig.mask);
+            file.append("equipment_index", fileConfig.equipmentindex);
+            file.append("metername_index", fileConfig.meterindex);
+            file.append("metername", fileConfig.metername);
             
             request.open("POST", "/api/upload", true);
             request.send(file); 
@@ -368,23 +293,47 @@
     
     _changeFileDelimiter: function(delimiter) {
         var line = lineExtract;
+        var delimiterEl = document.querySelector('#delimiter').querySelector('input');
+        var timestampEl = document.querySelector('#timestampIndex').querySelector('select');
+        var valueEl = document.querySelector('#valueIndex').querySelector('select');
+        var tagnameEl = document.querySelector('#tagnameIndex').querySelector('select');
+        var equipmentEl = document.querySelector('#equipmentIndex').querySelector('select');
+        var meterEl = document.querySelector('#meterIndex').querySelector('select');
         
-        document.querySelector('#timestampIndex').querySelector('input').value = "";
-        document.querySelector('#valueIndex').querySelector('input').value = "";
-        document.querySelector('#tagnameIndex').querySelector('input').value = "";
-        
-        document.querySelector('#timestampIndex').querySelector('small').textContent = "";
-        document.querySelector('#valueIndex').querySelector('small').textContent = "";
-        document.querySelector('#tagnameIndex').querySelector('small').textContent = "";
+        delimiterEl.value = delimiter;
             
-        if (line.match(delimiter)) {
+        if (line.match(delimiter) && delimiter != "") {
 
             var dateindex = 0;
             var valueindex = 0;
             var tagindex = 0;
             var lsplit = line.split(delimiter);
             
+            while(timestampEl.firstChild) timestampEl.removeChild(timestampEl.firstChild); 
+            while(valueEl.firstChild) valueEl.removeChild(valueEl.firstChild);
+            while(tagnameEl.firstChild) tagnameEl.removeChild(tagnameEl.firstChild);
+            while(equipmentEl.firstChild) equipmentEl.removeChild(equipmentEl.firstChild);
+            while(meterEl.firstChild) meterEl.removeChild(meterEl.firstChild);
+            
+            var option = document.createElement('option');
+            option.value = -1;
+            option.textContent = "-- Not Specified --";
+            timestampEl.insertBefore(option.cloneNode(true), null);
+            valueEl.insertBefore(option.cloneNode(true), null);
+            tagnameEl.insertBefore(option.cloneNode(true), null);
+            equipmentEl.insertBefore(option.cloneNode(true), null);
+            meterEl.insertBefore(option.cloneNode(true), null);
+            
             for (var j=0, l; l = lsplit[j]; j++) {
+                option.value = j;
+                option.textContent = lsplit[j];
+                
+                timestampEl.insertBefore(option.cloneNode(true), null);
+                valueEl.insertBefore(option.cloneNode(true), null);
+                tagnameEl.insertBefore(option.cloneNode(true), null);
+                equipmentEl.insertBefore(option.cloneNode(true), null);
+                meterEl.insertBefore(option.cloneNode(true), null);
+                
                 if (l.match(/([0-9]+[:][0-9]+\w)/g)) { dateindex = j;}
                 else if (l.match(/([0-9]+[.,]?[0-9]?[^:\W]\w)/g)) { valueindex = j;}
                 else { tagindex = j;}
@@ -393,36 +342,25 @@
             fileConfig.delimiter = delimiter;
             fileConfig.valueindex = valueindex;
             fileConfig.tagindex = tagindex;
-            fileConfig.dateindex = dateindex;    
+            fileConfig.dateindex = dateindex;
 
-            document.querySelector('#delimiter').querySelector('input').value = delimiter;
-            document.querySelector('#timestampIndex').querySelector('input').value = dateindex;
-            document.querySelector('#valueIndex').querySelector('input').value = valueindex;
-            document.querySelector('#tagnameIndex').querySelector('input').value = tagindex;
+            timestampEl.value = dateindex;
+            valueEl.value = valueindex;
+            meterEl.value = tagindex;
             
-            document.querySelector('#delimiter').querySelector('small').textContent = "From file: " + line.match(/[-;,\s|:]/g).join("   ");
-            document.querySelector('#timestampIndex').querySelector('small').textContent = "From file: " + lsplit[dateindex];
-            document.querySelector('#valueIndex').querySelector('small').textContent = "From file: " + lsplit[valueindex];
-            document.querySelector('#tagnameIndex').querySelector('small').textContent = "From file: " + lsplit[tagindex];
+            // Remove duplicates
+            var detectedDelimiters = line.match(/[-;,\s|:]/g).filter(function(item, pos, self) {
+                return self.indexOf(item) == pos;
+            });
+            document.querySelector('#delimiter').querySelector('small').textContent = "Suggestions: " + detectedDelimiters.join("  ");
         };
     },
     
-    _changeIndex: function(e) {
-        var delimiter = document.querySelector('#delimiter').querySelector('input').value;
-        var fromFile = e.target.nextElementSibling;
-        var index = e.target.value; 
-        console.log(delimiter);
-        console.log(fromFile);
-        console.log(index);
-        console.log(lineExtract);
-        fromFile.textContent = "";
-        
-        if(lineExtract.match(delimiter)) {
-            var lsplit = lineExtract.split(delimiter);
-            if (index >= 0 && index < lsplit.length) {
-                fromFile.textContent = "From file: " + lsplit[index];
-            }
+    resizeName: function(name) {
+        if (name.length > 30) {
+            name = name.substr(0, 13) + '...' + name.substr(14, 27);
         }
+        return name;
     },
     
     ready: function() {
@@ -432,12 +370,13 @@
         var uploadFile = this.$.uploadFile;
         var cancelUpload = this.$.cancelUpload;
         var delimiterInput = document.querySelector('#delimiter').querySelector('input');
-        var timestampInput = document.querySelector('#timestampIndex').querySelector('input');
-        var valueInput = document.querySelector('#valueIndex').querySelector('input');
-        var tagnameInput = document.querySelector('#tagnameIndex').querySelector('input');
+        var timestampInput = document.querySelector('#timestampIndex').querySelector('select');
+        var valueInput = document.querySelector('#valueIndex').querySelector('select');
+        var tagnameInput = document.querySelector('#tagnameIndex').querySelector('select');
         var selectFileInput = document.createElement("INPUT");
         var fileUploader = document.querySelector('.fileUploader');
         var fileConfig = document.querySelector('.fileConfig');
+        var timestampMaskEl = document.querySelector('#timestampMask').querySelector('input');
         
         selectFileInput.setAttribute("type", "file");
         selectFileInput.setAttribute("multiple", "true");
@@ -454,20 +393,12 @@
             self._handleCancelUpload();
         }, false);
         
-        delimiterInput.addEventListener('change', function(e) {
+        delimiterInput.addEventListener('input', function(e) {
             self._changeFileDelimiter(e.target.value);
         }, false);
         
-        timestampInput.addEventListener('change', function(e) {
-            self._changeIndex(e);
-        }, false);
-        
-        valueInput.addEventListener('change', function(e) {
-            self._changeIndex(e);
-        }, false);
-        
-        tagnameInput.addEventListener('change', function(e) {
-            self._changeIndex(e);
+        timestampMaskEl.addEventListener('change', function(e) {
+            fileConfig.mask = timestampMaskEl.value;
         }, false);
         
         if (this._checkFileApis()) {
