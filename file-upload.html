@@ -137,7 +137,7 @@
         var fileList = document.querySelector('#fileList').insertBefore(document.createElement('ul'), null);
         var files = evt.target.files;
         var fileUploader = document.querySelector('.fileUploader');
-        var fileConfig = document.querySelector('.fileConfig');
+        var fileConfigEl = document.querySelector('.fileConfig');
         
         // Have to get the polymer element in order to use the functions defined here at runtime
         var fileUploadBody = document.querySelector('#fileUploadBody');
@@ -227,12 +227,7 @@
                 this.bar.textContent = '100%';
             };
             
-            var fd = new FormData();
-            fd.append("file", f);
-            fd.append("packetsize", "5000");
-            fd.append("concat", "_")
-            
-            requests.push([request, fd]);
+            requests.push([request, f]);
             
             var reader = new FileReader();
             
@@ -261,14 +256,23 @@
             reader.readAsBinaryString(sliced);
         }
         
-        fileConfig.offsetHeight < fileUploader.offsetHeight ? fileConfig.style.minHeight = fileUploader.offsetHeight + "px" : fileUploader.style.minHeight = fileConfig.offsetHeight + "px";
+        fileConfigEl.offsetHeight < fileUploader.offsetHeight ? fileConfigEl.style.minHeight = fileUploader.offsetHeight + "px" : fileUploader.style.minHeight = fileConfigEl.offsetHeight + "px";
     },
     
     _handleUploadFiles: function() {
         for (var i = 0, r; r = requests[i]; i++) {
             var request = r[0];
-            var file = r[1];
+            var f = r[1];
             
+            var file = new FormData();
+            // CSV file
+            file.append("file", f);
+            
+            // Hardcoded config, we don't want to change the packet size nor the concatenation char
+            file.append("packetsize", "5000");
+            file.append("concat", "_")
+            
+            // Configurable properties
             file.append("tagname_index", fileConfig.tagindex);
             file.append("timestamp_index", fileConfig.dateindex);
             file.append("value_index", fileConfig.valueindex);
@@ -375,30 +379,68 @@
         var tagnameInput = document.querySelector('#tagnameIndex').querySelector('select');
         var selectFileInput = document.createElement("INPUT");
         var fileUploader = document.querySelector('.fileUploader');
-        var fileConfig = document.querySelector('.fileConfig');
+        var fileConfigEl = document.querySelector('.fileConfig');
         var timestampMaskEl = document.querySelector('#timestampMask').querySelector('input');
+        var equipmentEl = document.querySelector('#equipmentIndex').querySelector('select');
+        var meterEl = document.querySelector('#meterIndex').querySelector('select');
+        var meternameEl = document.querySelector('#meterName').querySelector('input');
         
         selectFileInput.setAttribute("type", "file");
         selectFileInput.setAttribute("multiple", "true");
         
+        // Select File button click event
         selectFile.addEventListener('click', function() {
             selectFileInput.click();
         }, false);
         
+        // Start Upload button click event
         uploadFile.addEventListener('click', function() {
             self._handleUploadFiles();
         }, false);
         
+        // Cancel Upload button click event
         cancelUpload.addEventListener('click', function() {
             self._handleCancelUpload();
         }, false);
         
+        // Change demiliter char event
         delimiterInput.addEventListener('input', function(e) {
             self._changeFileDelimiter(e.target.value);
         }, false);
         
+        // Change timestamp mask event
         timestampMaskEl.addEventListener('change', function(e) {
             fileConfig.mask = timestampMaskEl.value;
+        }, false);
+        
+        // Change timestamp field event
+        timestampInput.addEventListener('change', function(e) {
+            fileConfig.dateindex = timestampInput.value;
+        }, false);
+        
+        // Change tag name field event
+        tagnameInput.addEventListener('change', function(e) {
+            fileConfig.tagindex = tagnameInput.value;
+        }, false);
+        
+        // Change equipment name field event
+        equipmentEl.addEventListener('change', function(e) {
+            fileConfig.equipmentindex = equipmentEl.value;
+        }, false);
+        
+        // Change value field event
+        valueInput.addEventListener('change', function(e) {
+            fileConfig.valueindex = valueInput.value;
+        }, false);
+        
+        // Change meter field event
+        meterEl.addEventListener('change', function(e) {
+            fileConfig.meterindex = meterEl.value;
+        }, false);
+        
+        // Change meter name event
+        meternameEl.addEventListener('change', function(e) {
+            fileConfig.metername = meternameEl.value;
         }, false);
         
         if (this._checkFileApis()) {
@@ -406,7 +448,9 @@
             selectFileInput.addEventListener('change', self._handleFileSelect, false);
         };
         
-        fileConfig.offsetHeight < fileUploader.offsetHeight ? fileConfig.style.minHeight = fileUploader.offsetHeight + "px" : fileUploader.style.minHeight = fileConfig.offsetHeight + "px";
+        fileConfigEl.offsetHeight < fileUploader.offsetHeight ? fileConfigEl.style.minHeight = fileUploader.offsetHeight + "px" : fileUploader.style.minHeight = fileConfigEl.offsetHeight + "px";
+        
+        document.querySelector('paper-tooltip').querySelector('div').classList.add('file-upload');
     }
   });
 </script>
