@@ -170,6 +170,32 @@
             request.upload.bar = progressBar;
             request.bar = progressBar;
             request.fileName = f.name;
+
+            // Firefox
+            // request.onprogress = function(evt) {
+            //     var progressBar = fileHtml.querySelector('#progressBar').querySelector('.percent');
+            //     if (evt.lengthComputable) {
+            //         var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
+            //         if (percentLoaded < 100) {
+            //             progressBar.style.width = (percentLoaded * 2) + 'px';
+            //             progressBar.textContent = percentLoaded + '%';
+            //         }
+            //     }
+            // }
+            
+            // Chrome
+            request.upload.onprogress = function(evt) {
+                if (evt.lengthComputable) {
+                    var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
+                    if (percentLoaded < 100) {
+                        this.bar.style.width = (percentLoaded * 2) + 'px';
+                        this.bar.textContent = percentLoaded + '%';
+                        if (percentLoaded > 95) {
+                            this.bar.textContent = "Processing... ";
+                        }
+                    };
+                }
+            };
             
             request.onerror = function(evt) {
                 var fileConsole = document.querySelector('#fileConsole');
@@ -188,28 +214,6 @@
                 }
             };
             
-            // Chrome
-            request.upload.onprogress = function(evt) {
-                if (evt.lengthComputable) {
-                    var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
-                    if (percentLoaded < 100) {
-                        this.bar.style.width = (percentLoaded * 2) + 'px';
-                        this.bar.textContent = percentLoaded + '%';
-                    }
-                }
-            };
-            // Firefox
-            // request.onprogress = function(evt) {
-            //     var progressBar = fileHtml.querySelector('#progressBar').querySelector('.percent');
-            //     if (evt.lengthComputable) {
-            //         var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
-            //         if (percentLoaded < 100) {
-            //             progressBar.style.width = (percentLoaded * 2) + 'px';
-            //             progressBar.textContent = percentLoaded + '%';
-            //         }
-            //     }
-            // }
-            
             request.onabort = function(e) {
                 fileConsole.textContent += '\nUpload cancelled for: ' + e.target.fileName;
                 e.target.bar.textContent = 'Cancelled';
@@ -217,6 +221,7 @@
             };
             request.onloadstart = function(e) {
                 this.bar.classList.remove('uploadAborted');
+                this.bar.classList.remove('uploadWaiting');
                 this.bar.classList.add('loading');
                 this.bar.textContent = "0%";
                 this.bar.style.width = '0px';
@@ -225,6 +230,7 @@
             request.onload = function(e) {
                 this.bar.style.width = '200px';
                 this.bar.textContent = '100%';
+                fileUploadBody._handleUploadFiles();
             };
             
             requests.push([request, f]);
@@ -260,38 +266,53 @@
     },
     
     _handleUploadFiles: function() {
+        var inProgress = 0;
         for (var i = 0, r; r = requests[i]; i++) {
             var request = r[0];
             var f = r[1];
             
-            var file = new FormData();
-            // CSV file
-            file.append("file", f);
-            
-            // Hardcoded config, we don't want to change the packet size nor the concatenation char
-            file.append("packetsize", "5000");
-            file.append("concat", "_")
-            
-            // Configurable properties
-            file.append("tagname_index", fileConfig.tagindex);
-            file.append("timestamp_index", fileConfig.dateindex);
-            file.append("value_index", fileConfig.valueindex);
-            file.append("delimiter", fileConfig.delimiter);
-            file.append("timestamp", fileConfig.mask);
-            file.append("equipment_index", fileConfig.equipmentindex);
-            file.append("metername_index", fileConfig.meterindex);
-            file.append("metername", fileConfig.metername);
-            
-            request.open("POST", "/api/upload", true);
-            request.send(file); 
+            if (request.readyState == 0 && inProgress == 0) {
+                var file = new FormData();
+                inProgress = 1;
+                
+                // CSV file
+                file.append("file", f);
+                
+                // Hardcoded config, we don't want to change the packet size nor the concatenation char
+                file.append("packetsize", "5000");
+                file.append("concat", "_")
+                
+                // Configurable properties
+                file.append("tagname_index", fileConfig.tagindex);
+                file.append("timestamp_index", fileConfig.dateindex);
+                file.append("value_index", fileConfig.valueindex);
+                file.append("delimiter", fileConfig.delimiter);
+                file.append("timestamp", fileConfig.mask);
+                file.append("equipment_index", fileConfig.equipmentindex);
+                file.append("metername_index", fileConfig.meterindex);
+                file.append("metername", fileConfig.metername);
+                
+                request.open("POST", "/api/upload", true);
+                request.send(file);
+            } else
+            if (request.readyState == 0 && inProgress == 1) {
+                request.bar.textContent = "Waiting...";
+                request.bar.classList.add('uploadWaiting');
+                request.bar.classList.add('loading');
+            }
         }
     },
     
     _handleCancelUpload: function() {
         for (var i = 0, r; r = requests[i]; i++) {
             var request = r[0];
-
-            request.abort(); 
+            if (request.readyState != 0 && request.readyState != 4) {
+                request.abort();
+            }
+            else if (request.readyState == 0) {
+                request.bar.classList.remove('loading');
+                request.bar.classList.remove('uploadWaiting');
+            };
         }
     },
     

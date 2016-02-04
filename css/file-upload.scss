@@ -55,6 +55,7 @@
     line-height: 14px;
     text-align: right;
     padding-right: 5px;
+    color: #000;
 }
 .loading {
     opacity: 1.0;
@@ -76,6 +77,14 @@
     background-color: #fff;
     font-weight: bold;
     text-align: left;
+    color: $alert-red;
+}
+.uploadWaiting {
+    width: auto;
+    background-color: #fff;
+    font-weight: normal;
+    text-align: left;
+    color: $dv-basic-blue;
 }
 .fileConsole {
     overflow: auto;
