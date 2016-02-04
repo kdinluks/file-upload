@@ -1083,6 +1083,14 @@ sub {
   text-align: left;
   color: #5da5da; }
 
+.uploadError {
+  width: auto;
+  background-color: #fff;
+  font-weight: normal;
+  text-align: left;
+  color: #e53838;
+  font-size: 10px; }
+
 .fileConsole {
   overflow: auto;
   font-size: 12px;

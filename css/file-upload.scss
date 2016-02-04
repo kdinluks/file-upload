@@ -86,6 +86,14 @@
     text-align: left;
     color: $dv-basic-blue;
 }
+.uploadError {
+    width: auto;
+    background-color: #fff;
+    font-weight: normal;
+    text-align: left;
+    color: $alert-red;
+    font-size: 10px;
+}
 .fileConsole {
     overflow: auto;
     font-size: 12px;

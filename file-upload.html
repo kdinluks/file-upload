@@ -147,12 +147,12 @@
         for (var i = 0, f; f = files[i]; i++) {
             
             if (!f.type.match('text/csv')) {
-                fileConsole.textContent += '"' + f.name + '" is not allowed.\n';
+                fileConsole.textContent = '"' + f.name + '" is not allowed.\n' + fileConsole.textContent;
                 continue;
             }
             
             if (f.size > self.maxSize) {
-                fileConsole.textContent += '"' + f.name + '" is is too big.\n';
+                fileConsole.textContent = '"' + f.name + '" is is too big.\n' + fileConsole.textContent;
                 continue;
             }
             
@@ -197,21 +197,16 @@
                 }
             };
             
-            request.onerror = function(evt) {
+            request.onerror = function(e) {
                 var fileConsole = document.querySelector('#fileConsole');
-                switch(evt.target.error.code) {
-                    case evt.target.error.NOT_FOUND_ERR:
-                        fileConsole.textContent += '\nFile Not Found!';
-                        break;
-                    case evt.target.error.NOT_READABLE_ERR:
-                        fileConsole.textContent += '\nFile is not readable';
-                        break;
-                    case evt.target.error.ABORT_ERR:
-                        fileConsole.textContent += '\nOperation Aborted!';
-                        break;
-                    default:
-                        fileConsole.textContent += '\nAn error has occurred when reading this file.';
-                }
+                e.target.bar.style.width = '200px';
+                e.target.bar.textContent = 'Something went wrong.';
+                e.target.bar.classList.add('uploadAborted');
+                var consoleTemp = fileConsole.textContent;
+                fileConsole.textContent = '\nError uploading the file: ' + e.target.fileName;
+                fileConsole.textContent += '\nPlease check your configuration and try again.';
+                fileConsole.textContent += '\n';
+                fileConsole.textContent += consoleTemp;
             };
             
             request.onabort = function(e) {
@@ -225,11 +220,23 @@
                 this.bar.classList.add('loading');
                 this.bar.textContent = "0%";
                 this.bar.style.width = '0px';
-                document.querySelector('#fileConsole').textContent = '';
             };
             request.onload = function(e) {
-                this.bar.style.width = '200px';
-                this.bar.textContent = '100%';
+                if (e.target.status == 200) {
+                    this.bar.style.width = '200px';
+                    this.bar.textContent = '100%';
+                }
+                else {
+                    var fileConsole = document.querySelector('#fileConsole');
+                    e.target.bar.style.width = '200px';
+                    e.target.bar.textContent = 'Something went wrong.';
+                    e.target.bar.classList.add('uploadAborted');
+                    var consoleTemp = fileConsole.textContent;
+                    fileConsole.textContent = '\nError uploading the file: ' + e.target.fileName;
+                    fileConsole.textContent += '\nPlease check your configuration and try again.';
+                    fileConsole.textContent += '\n';
+                    fileConsole.textContent += consoleTemp;
+                };
                 fileUploadBody._handleUploadFiles();
             };
             
@@ -249,7 +256,7 @@
                 lineExtract = line;
                 
                 var tempText = fileConsole.textContent;
-                fileConsole.textContent = "\nFirst line from file " + reader.fileName;
+                fileConsole.textContent = "\nFirst line from file " + e.target.fileName;
                 fileConsole.textContent += "\n" + line;
                 fileConsole.textContent += "\n";
                 fileConsole.textContent += tempText;
