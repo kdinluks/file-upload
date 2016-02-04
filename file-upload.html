@@ -271,6 +271,9 @@
             var request = r[0];
             var f = r[1];
             
+            if (request.readyState != 0 && request.readyState != 4) {
+                inProgress = 1;
+            }
             if (request.readyState == 0 && inProgress == 0) {
                 var file = new FormData();
                 inProgress = 1;
