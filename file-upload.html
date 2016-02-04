@@ -54,7 +54,7 @@
             </div>
             <div class="configItem" id="timestampMask">
                 <div>Timestamp Mask</div>
-                <input type="text" value="%m/%d/%Y %I:%M:%S %p" />
+                <input type="text" />
                 <small><a href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior" target="_blank">Specification</a></small>
             </div>
             <div class="configItem" id="tagnameIndex">
@@ -101,20 +101,30 @@
         /**
           * List of excursions
           */
-        showHeader: {
-            type: Boolean,
-            value: true,
-            reflectToAttribute: true
-        },
-        tile: {
-            type: String,
-            value: "File Upload",
-            reflectToAttribute: true
-        },
         maxSize: {
             type: Number,
-            value: 10485760, //10MB
-            reflectToAttribute: true
+            value: 10485760 //10MB
+        },
+        initialConfiguration: {
+            type: Object,
+            value: {
+                valueindex: "",
+                tagindex: "",
+                dateindex: "",
+                delimiter: "",
+                mask: "%m/%d/%Y %I:%M:%S %p",
+                metername: "",
+                meterindex: "",
+                equipmentindex: ""
+            }
+        },
+        concat: {
+            type: String,
+            value: "_"
+        },
+        packetSize: {
+            type: Number,
+            value: 5000
         }
     },
     
@@ -140,7 +150,7 @@
         var fileConfigEl = document.querySelector('.fileConfig');
         
         // Have to get the polymer element in order to use the functions defined here at runtime
-        var fileUploadBody = document.querySelector('#fileUploadBody');
+        var fileUploadBody = document.querySelector('file-upload');
         
         fileList.className = "fileListUl style-scope file-upload";
         
@@ -273,6 +283,9 @@
     },
     
     _handleUploadFiles: function() {
+        // Have to get the polymer element in order to access it's properties at runtime
+        var fileUploadBody = document.querySelector('file-upload');
+        
         var inProgress = 0;
         for (var i = 0, r; r = requests[i]; i++) {
             var request = r[0];
@@ -289,8 +302,8 @@
                 file.append("file", f);
                 
                 // Hardcoded config, we don't want to change the packet size nor the concatenation char
-                file.append("packetsize", "5000");
-                file.append("concat", "_")
+                file.append("packetsize", fileUploadBody.packetSize);
+                file.append("concat", fileUploadBody.concat)
                 
                 // Configurable properties
                 file.append("tagname_index", fileConfig.tagindex);
@@ -415,6 +428,12 @@
         var equipmentEl = document.querySelector('#equipmentIndex').querySelector('select');
         var meterEl = document.querySelector('#meterIndex').querySelector('select');
         var meternameEl = document.querySelector('#meterName').querySelector('input');
+        
+        // Load initial configuration from the component properties
+        fileConfig = self.initialConfiguration;
+        
+        // Add initial mask to mask input element
+        timestampMaskEl.value = fileConfig.mask;
         
         selectFileInput.setAttribute("type", "file");
         selectFileInput.setAttribute("multiple", "true");
